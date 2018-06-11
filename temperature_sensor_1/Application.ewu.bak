@@ -1,0 +1,278 @@
+$version 6.60
+
+// This is the root component of the entire GUI application.
+$rect <20,20,220,60>
+$output false
+class Application : Core::Root
+{
+  $rect <500,0,700,40>
+  inherited property Bounds = <0,0,320,240>;
+
+  // To do:
+  // 
+  // - The simplest way to compose the appearance of the application is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To store values use the 'Variable', 'Array' and 'Property' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  note legend Note1
+  {
+    attr Bounds = <0,400,780,600>;
+  }
+
+  // This is a filled rectangle view.
+  $rect <20,20,160,60>
+  object Views::Rectangle Rectangle
+  {
+    preset Bounds = <0,0,320,240>;
+    preset Color = #000000FF;
+  }
+
+  // This is an ordinary text view.
+  $rect <20,20,160,60>
+  object Views::Text Text
+  {
+    preset Bounds = <-30,10,340,50>;
+    preset String = "Temperature sensor";
+    preset Font = Application::Font;
+  }
+
+  $rect <20,20,160,60>
+  object Flat::Gauge Gauge
+  {
+    preset Bounds = <170,70,300,190>;
+  }
+
+  $rect <20,20,160,60>
+  object Flat::AnalogDisplay AnalogDisplay
+  {
+    preset Bounds = <20,70,140,190>;
+    preset Caption = "*C";
+  }
+
+  $rect <20,20,160,60>
+  object Views::Bevel Bevel
+  {
+    preset Bounds = <10,10,310,230>;
+    preset Width = 4;
+    preset ColorL = #ED2027FF;
+    preset ColorR = #ED2027FF;
+    preset ColorB = #F61C08FF;
+    preset ColorT = #ED2027FF;
+  }
+
+  $rect <20,20,160,60>
+  object Views::Text Text1
+  {
+    preset Bounds = <110,180,210,210>;
+    preset String = "Press to Start";
+    preset Font = Resources::DefaultFont;
+  }
+
+  $rect <20,20,160,60>
+  object Flat::Indicator Indicator
+  {
+    preset Bounds = <140,150,170,180>;
+    preset IconIndex = 2;
+    preset BackColor = Flat::ColorOfBackground;
+  }
+}
+
+// To do:
+// 
+// - Open the 'Application' component for editing. It represents your entire GUI. \
+// Use widgets, views, event handlers and effects from the Gallery to assemble there \
+// your desired GUI look and feel.
+// 
+// - Create your own GUI components, widgets, panels, etc. The Gallery folder 'Components' \
+// contains for this purpose various templates you can simply add to the unit and \
+// thus start your own component development.
+// 
+// - You can add your own bitmap and font resources to the unit. Use the templates \
+// 'Bitmap Resource' and 'Font Resource' from the Gallery folder 'Components' for \
+// this purpose.
+// 
+// - You can add here also constants to store e.g. multilingual text fragments. Use \
+// for this purpose the template 'Constant' from the Gallery folder 'Chora'.
+// 
+// - To add an interface for communication with the target device use the template \
+// 'Device Interface' from the Gallery folder 'Device'.
+note legend Note1
+{
+  attr Bounds = <20,80,710,380>;
+}
+
+// This is a font resource.
+$rect <230,20,430,60>
+$output false
+resource Resources::Font Font
+{
+  attr fontname FontName = Arial;
+  attr fontheight Height = 32;
+  attr fontquality Quality = High;
+  attr fontranges Ranges = 0x20-0xFF;
+  attr fontaspectratio AspectRatio = 1.0;
+  attr fontbold Bold = false;
+  attr fontitalic Italic = false;
+}
+
+$rect <450,20,650,60>
+inline Inline
+{
+  #include "stm32f4xx_hal.h"
+  #include "DeviceDriver.h"
+  GPIO_InitTypeDef GPIO_InitStruct;
+  /* USER CODE END Includes */
+
+  /* Private variables ---------------------------------------------------------*/
+  TIM_HandleTypeDef htim2;
+
+  /* USER CODE BEGIN PV */
+  /* Private variables ---------------------------------------------------------*/
+  int retry;
+  int set = 2;
+  int flag = 2;
+  int dat;
+  int buf[5];
+  int timer_value[40];
+  int timer_raw[40];
+  int temperature;  	    
+  int humidity; 
+  int Rh,RhDec,Temp,TempDec,ChkSum;
+  int tempo;
+  void DHT11_delay_us(uint32_t us){
+  	HAL_TIM_Base_Start(&htim2);
+  	TIM2->CNT = 0;
+  	while((TIM2->CNT) <= us);
+  	HAL_TIM_Base_Stop(&htim2);
+  }
+  static void MX_GPIO_Init(void)
+  {
+    /* GPIO Ports Clock Enable */
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+  	__HAL_RCC_GPIOD_CLK_ENABLE();
+  }
+
+  void PSDHT11_IO_OUT(void)
+  {
+  	
+  	/*Configure GPIO pin Output Level */
+  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+  	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+  	/*Configure GPIO pin : PA0 */
+  	GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  }
+  void PSDHT11_IO_IN(void)
+  {
+  	//MX_GPIO_Init();
+  	/*Configure GPIO pin : PA0 */
+    GPIO_InitStruct.Pin = GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  }
+  uint8_t PSDHT11_Init(void)
+  {	 		    
+  	//TM_Delay_Init();
+  	PSDHT11_Rst();  
+  	return PSDHT11_Check();
+  }
+  void PSDHT11_Rst(void)	   
+  {                 
+  		PSDHT11_IO_OUT(); 	//SET OUTPUT
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,GPIO_PIN_RESET); 	//GPIOA.0=0  
+  		HAL_Delay(20);    	//Pull down Least 18ms
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,GPIO_PIN_SET); 	//GPIOA.0=1 
+  		DHT11_delay_us(20);     	//Pull up 20~40us
+  		PSDHT11_IO_IN();//SET INPUT	 
+
+  }
+  uint8_t PSDHT11_Check(void) 	   
+  {   
+  	retry=0;
+    
+  	while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7)==0&&retry<100)//DHT11 Pull down 40~80us
+  	{
+  		retry++;
+  		DHT11_delay_us(1);
+  	}	 
+  	if(retry>=100)
+  	{	
+  		return 1;
+  	}
+  	else 
+  	{	
+  		retry=0;
+    }	
+  	//PSDHT11_IO_IN();
+  	while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7)==1&&retry<100)//DHT11 Pull up 40~80us
+  	{
+  		retry++;
+  		DHT11_delay_us(1);
+  	} 
+  	if(retry>=100)
+  		{
+  			return 1;//check error
+  		}
+  	else
+  	{	
+  		return 0;
+  	}
+  }
+
+  void PSDHT11Read(int *Rh,int *RhDec,int *Temp,int *TempDec, int *ChkSum)
+  	{
+  			uint8_t j;
+  			uint8_t i;
+  			uint8_t k=0,l=0;
+  			uint8_t Value[5]={0x00,0x00,0x00,0x00,0x00};
+   if(set==1)
+   {
+   
+  				for (j = 0; j < 5; ++j) {
+  				for (i = 0; i < 8; ++i) {
+   
+  					while(!HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_7)){} 
+  					HAL_TIM_Base_Start(&htim2);// start the timer
+  					while(HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_7)){}
+  					tempo = __HAL_TIM_GET_COUNTER(&htim2);// take the counter value
+  						timer_raw[k]=tempo;
+  						timer_value[l]=(tempo-timer_raw[k-1]);
+  					HAL_TIM_Base_Stop(&htim2);
+  					if (timer_value[l]<30) 
+  						{
+  						Value[j]=Value[j]<<1;
+  						}
+  					else 
+  						{
+  						Value[j]=Value[j]<<1;
+  						Value[j] =Value[j]+1;
+  						}
+  						k++;						
+  						l++;
+
+  				}
+  			}
+  				*Rh=Value[0];
+      		*RhDec=Value[1];
+      		*Temp=Value[2];
+      		*TempDec=Value[3];
+      		*ChkSum=Value[4];	
+  	}
+  }
+}

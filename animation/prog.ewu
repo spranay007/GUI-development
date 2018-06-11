@@ -1,0 +1,1370 @@
+$version 6.60
+
+// Main body of the trial prog
+note group Note
+{
+  attr Bounds = <10,10,460,90>;
+}
+
+$rect <30,40,230,80>
+$output false
+class prog : Core::Group
+{
+  $rect <10,580,210,620>
+  inherited property Bounds = <0,0,800,480>;
+
+  $rect <840,100,1040,140>
+  inherited method UpdateLayout()
+  {
+    // Always invoke the inherited method.
+    super( aSize );
+
+    /*
+
+      HINT:
+
+      This method exists for sophisticated layout calculation. Please note, that in 
+      most cases it is completely sufficient to use the views property 'Layout' to
+      determine how the view should behave when the component is resized.
+
+    */
+
+    /*
+
+      TO DO:
+
+      Put here the code to calculate new position and size of enclosed views. The
+      current (new) size of the component itself is passed in the parameter aSize.
+      For example:
+
+        SomeView.Bounds = rect( 10, 10, aSize.x - 20, aSize.y - 20 );
+
+    */
+  }
+
+  $rect <840,49,1040,89>
+  inherited method UpdateViewState()
+  {
+    // Always invoke the inherited method.
+    super( aState );
+
+    /*
+
+      HINT 1:
+
+      This method is invoked automatically when the state set of the component has
+      been changed. The new state set can be found in the parameter aState.
+      Following are the important states:
+
+        Enabled   --> The component can react to user inputs.
+
+        Selected  --> The component is selected in context of its owner.
+
+        Focused   --> The component is selected in context of its owner and 
+                      the owner can react to keyboard events. In this manner the
+                      component is also able to react to keyboard events.
+
+        Modal     --> The component is modal. All events are redirected to this
+                      component.
+
+      To determine whether a state is currently active or not you have to test
+      the aState parameter. For example to test the 'Selected' state:
+
+        if ( aState.contains( Core::ViewState[ Selected ]))
+        {
+          ... yes, this component is currently selected.
+        }
+
+    */
+
+    /*
+
+      HINT 2:
+
+      Alternatively you can request this method invocation by executing explicitly
+      following code:
+
+
+        InvalidateViewState();
+
+    */
+      
+    /*
+
+      TO DO 1:
+
+      Put here the code to ensure that the visual aspect of the component does
+      reflect its current state. For example, depending on its 'Enabled' state
+      a component may appear with full colors or pale if it is disabled:
+
+        if ( aState.contains( Core::ViewState[ Enabled ]))
+        {
+          SomeBackgroundView.Opacity = 255;
+          SomeTextView.Color         = #000000FF;
+        }
+        else
+        {
+          SomeBackgroundView.Opacity = 128;
+          SomeTextView.Color         = #00000080;
+        }
+
+
+      TO DO 2:
+
+      You can evaluate here also the state of any other member in your component.
+      For example in a push-button component, the button should appear highlighted
+      as long as the user holds the finger within a touch area of the button:
+
+        if ( SomeTouchHandler.Down && SomeTouchHandler.Inside )
+          HighlightedBackground.Visible = true;
+        else
+          HighlightedBackground.Visible = false;
+
+      The touch handler itself only requests the update method to be called. Use
+      for this purpose 'InvalidateViewState()' method.
+
+
+      TO DO 3:
+
+      You can calculate here also the position/size of views accordingly to the
+      state of any other member in your component. For example in a slider you
+      can calculate the position of the slider knob from some properties like
+      'SliderValue' and 'SliderRange':
+
+        SliderKnob.Bounds.origin.x = ( SliderValue * Bounds.w ) / SliderRange;
+
+      Changing the 'SliderValue' or 'SliderRange' property should only request
+      the update method to be called. Use for this purpose 'InvalidateViewState()'
+      method.
+
+    */
+  }
+
+  // To do:
+  // 
+  // - Adjust the visible size of your component (the thick blue border).
+  // 
+  // - The simplest way to compose the appearance of the component is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To implement the interface of the component use the 'Property' template from \
+  // the Gallery folder 'Chora'.
+  // 
+  // - To store values use the 'Variable' and 'Array' templates available in the \
+  // Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - In the method 'UpdateViewState()' you can put code to update the state of \
+  // views enclosed in your component.
+  // 
+  // - In the method 'UpdateLayout()' you can put code to perform sophisticated layout \
+  // calculation for enclosed views.
+  note legend Note1
+  {
+    attr Bounds = <0,790,780,1110>;
+  }
+
+  $rect <20,20,160,60>
+  object Views::Rectangle Rectangle
+  {
+    preset Bounds = <0,0,800,480>;
+    preset Color = #B8C2FFFF;
+  }
+
+  $rect <840,149,1040,189>
+  slot changebattery
+  {
+    sender; /* the method is called from the sender object */
+
+    /* calculate the arrangement of all windows... */
+    var int32 x = prog::border.x;
+    var int32 y = prog::border.y;
+    var int32 w = prog::screensize.x - 2 * prog::border.x;
+    var int32 h = prog::screensize.y - prog::border.x - prog::statusheight;
+
+    batterywindow_s.ChangeMode( prog::operationmode.exclusive, rect( x, y, x + w, y + h ));
+
+    /* calculate a shift vector for all other windows */
+    var int32 dx = -batterywindow_s.Bounds.x1;
+    var int32 dy = -batterywindow_s.Bounds.y1;
+
+    // move all other windows out of the screen 
+    FeedWindow.ChangeMode( Cutter::OperationMode.Programming,
+      rect( FeedWindow.Bounds.x1 + dx, FeedWindow.Bounds.y1 + dy, FeedWindow.Bounds.x2 + dx, FeedWindow.Bounds.y2 + dy ));
+    FormatWindow.ChangeMode( Cutter::OperationMode.Programming,
+      rect( FormatWindow.Bounds.x1 + dx, FormatWindow.Bounds.y1 + dy, FormatWindow.Bounds.x2 + dx, FormatWindow.Bounds.y2 + dy ));
+    SpeedWindow.ChangeMode( Cutter::OperationMode.Programming,
+      rect( SpeedWindow.Bounds.x1 + dx, SpeedWindow.Bounds.y1 + dy, SpeedWindow.Bounds.x2 + dx, SpeedWindow.Bounds.y2 + dy ));
+    RemainingWindow.ChangeMode( Cutter::OperationMode.Programming,
+      rect( Cutter::ScreenSize.x, RemainingWindow.Bounds.y1, Cutter::ScreenSize.x + RemainingWindow.Bounds.w, RemainingWindow.Bounds.y2 ));
+
+    /* change the current operation mode of the button */
+    //MainButton.Mode = Cutter::ButtonMode.Ok;
+
+    /* stop machine... */
+    //Device.Running = false;
+
+
+  }
+
+  $rect <840,0,1040,40>
+  method int32 init( arg int32 aArg1 )
+  {
+    PaperRemaining = ^Cutter::Device.Remaining;
+
+    signal ProgrammingMode;
+  }
+
+  $rect <20,20,160,60>
+  object prog::batterywindow_s batterywindow_s
+  {
+    preset Bounds = <313,56,693,256>;
+  }
+}
+
+$rect <240,40,440,80>
+$output false
+enum operationmode
+{
+  $rect <10,10,210,50>
+  item programming;
+
+  $rect <220,10,420,50>
+  item running;
+
+  $rect <430,10,630,50>
+  item exclusive;
+}
+
+// windows and dialog
+note group Note1
+{
+  attr Bounds = <10,100,460,240>;
+}
+
+$rect <30,150,230,190>
+$output false
+class window : Core::Group
+{
+  $rect <10,230,210,270>
+  inherited property Bounds = <0,0,380,200>;
+
+  $rect <10,280,210,320>
+  inherited method UpdateLayout()
+  {
+    super( aSize );
+
+    /* arrange caption rect */
+    labelrect.Bounds = rect( 0, 0, aSize.x, prog::captionheight );
+
+    /* arrange text on left side - but if window covers more than half screen, arrange it on right side... */
+    var int32 ident = prog::captionheight / 2;
+    var int32 textW = ( prog::screensize.x - 2 * prog::border.x ) / 2;
+    if (( textW > aSize.x ) || ( aSize.y < prog::screensize.y / 2 ))
+      caption.Bounds = rect( ident, 0, aSize.x, prog::captionheight);
+    else
+      caption.Bounds = rect( aSize.x - textW - ident, 0, aSize.x, prog::captionheight );
+
+  }
+
+  $rect <10,330,210,370>
+  inherited method UpdateViewState()
+  {
+    aState;
+
+    /* colorize background if currently selected */
+    if ( touchpanel.Down && touchpanel.Inside )
+      backgroundrect.Color = prog::selectcolor;
+    else
+      backgroundrect.Color = prog::backcolor;
+
+  }
+
+  // To do:
+  // 
+  // - Adjust the visible size of your component (the thick blue border).
+  // 
+  // - The simplest way to compose the appearance of the component is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To implement the interface of the component use the 'Property' template from \
+  // the Gallery folder 'Chora'.
+  // 
+  // - To store values use the 'Variable' and 'Array' templates available in the \
+  // Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - In the method 'UpdateViewState()' you can put code to update the state of \
+  // views enclosed in your component.
+  // 
+  // - In the method 'UpdateLayout()' you can put code to perform sophisticated layout \
+  // calculation for enclosed views.
+  note legend Note1
+  {
+    attr Bounds = <10,380,790,700>;
+  }
+
+  $rect <20,20,160,60>
+  object Core::SimpleTouchHandler touchpanel
+  {
+    preset Point4 = <0,200>;
+    preset Point3 = <380,200>;
+    preset Point2 = <380,0>;
+    preset Point1 = <0,0>;
+    preset OnLeave = enterleaveslot;
+    preset OnEnter = enterleaveslot;
+    preset OnRelease = pressreleaseslot;
+    preset OnPress = pressreleaseslot;
+  }
+
+  $rect <20,20,160,60>
+  object Views::Rectangle backgroundrect
+  {
+    preset Bounds = <0,0,380,200>;
+    preset Color = prog::backcolor;
+  }
+
+  $rect <20,20,160,60>
+  object Views::Rectangle labelrect
+  {
+    preset Bounds = <0,0,380,40>;
+    preset Color = #6C5DD8FF;
+  }
+
+  $rect <20,20,160,60>
+  object Views::Text caption
+  {
+    preset Layout = Core::Layout[AlignToLeft];
+    preset Bounds = <10,0,370,40>;
+    preset Alignment = Views::TextAlignment[AlignHorzLeft, AlignVertCenter];
+    preset String = "Caption";
+    preset Font = Application::Font;
+  }
+
+  // The function 'ChangeMode' is responsible to make the transission between the \
+  // different modes of the window and to start the corresponding animations.
+  $rect <400,0,600,40>
+  method int32 changemode( arg int32 aArg1 )
+  {
+    Mode = aMode;
+
+    /* stop current rect effect */
+    recteffect.Enabled = false;
+
+    /* use current bounds as start value */
+    recteffect.Value1 = Bounds;
+
+    /* use given position as end value */
+    recteffect.Value2 = aDestBounds;
+
+    /* start rect effect */
+    recteffect.Enabled = true;
+
+    /* restart the fade effect timer */
+    fadeeffect.Enabled = false;
+    fadeeffect.Enabled = true;
+
+    /* enable touchhandler only for programming mode */
+    TouchHandler.Enabled = ( aMode == prog::operationmode.programming );
+
+
+  }
+
+  $rect <400,50,600,90>
+  object Effects::RectEffect recteffect
+  {
+    preset Timing = Effects::Timing.FastIn_EaseOut;
+    preset NoOfCycles = 1;
+    preset CycleDuration = prog::animationtime;
+    preset Outlet = ^Bounds;
+  }
+
+  $rect <610,0,810,40>
+  var prog::operationmode mode = prog::operationmode.programming;
+
+  $rect <400,100,600,140>
+  object Effects::Int32Effect fadeeffect;
+
+  $rect <400,150,600,190>
+  slot onfade
+  {
+    sender; /* the method is called from the sender object */
+
+    fadeanimation( Mode, fadeeffect.Value );
+
+  }
+
+  $rect <620,150,820,190>
+  method int32 fadeanimaition( arg int32 aArg1 )
+  {
+    aMode;
+    aValue;
+
+  }
+
+  $rect <620,190,820,230>
+  property slot oncancel = null;
+
+  $rect <230,330,430,370>
+  slot pressreleaseslot
+  {
+    /* releasing the finger outside the button area is ignored */
+    if ( !TouchHandler.Down && TouchHandler.Inside )
+    {
+      /* inform the OnChange slot method */
+      signal OnChange;
+    }
+  }
+
+  $rect <230,280,430,320>
+  slot enterleaveslot
+  {
+    InvalidateViewState();
+  }
+
+  $rect <400,190,600,230>
+  slot Oncancel
+  {
+    sender; /* the method is called from the sender object */
+    postsignal oncancel;
+  }
+
+  $rect <620,230,820,270>
+  property slot onchange = null;
+}
+
+$rect <240,190,440,230>
+$output false
+class batterywindow_s : prog::window
+{
+  $rect <20,20,160,60>
+  inherited object caption
+  {
+    preset String = "Battery Percentage";
+  }
+
+  // To do:
+  // 
+  // - Adjust the visible size of your component (the thick blue border).
+  // 
+  // - The simplest way to compose the appearance of the component is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To implement the interface of the component use the 'Property' template from \
+  // the Gallery folder 'Chora'.
+  // 
+  // - To store values use the 'Variable' and 'Array' templates available in the \
+  // Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - In the method 'UpdateViewState()' you can put code to update the state of \
+  // views enclosed in your component.
+  // 
+  // - In the method 'UpdateLayout()' you can put code to perform sophisticated layout \
+  // calculation for enclosed views.
+  note legend Note1
+  {
+    attr Bounds = <220,230,1000,550>;
+  }
+
+  $rect <20,20,160,60>
+  object Flat::Gauge battery_gauge
+  {
+    preset Bounds = <30,60,180,180>;
+  }
+
+  $rect <450,0,650,40>
+  method int32 fadeanimation( arg int32 aArg1 )
+  {
+    // if window is going to programming mode , fade in the medium text ... 
+    if ( aMode == prog::operationmode.programming )
+    {
+      text_large.Opacity = aValue;
+      text_mid.Opacity = 0xFF - aValue;
+    }
+    // if window is going to running mode , fade in the large text ...
+    else if ( aMode == prog::operationmode.running )
+    {
+      text_large.Opacity = 0xFF - aValue;
+      text_mid.Opacity = aValue;
+    }
+    // fade out everything for exclusive mode... 
+    if ( aMode == prog::OperationMode.Exclusive )
+    {
+      // create a dialog if necessary 
+      if ( dialog == null )
+      {
+        dialog = new prog::batterywindow_l;
+        dialog.Bounds.origin = point( 0, prog::captionheight );
+        Add( dialog, 0 );
+        dialog.oncancel = OnCancel;
+        //dialog.PaperBatch = ^Cutter::Device.PaperBatch;
+      }
+      dialog.Opacity = aValue;
+
+      text_large.Opacity = 0xFF - aValue;
+      text_mid.Opacity = 0xFF - aValue;
+      //text_mid.Opacity = 0xFF - aValue;
+      battery_gauge.Opacity = 0xFF - aValue;
+    }
+    else
+    {
+        // fade out and delete the dialog if necessary 
+      if ( dialog != null )
+      {
+        if ( aValue > dialog.Opacity )
+          dialog.Opacity = aValue;
+        if ( aValue < 10 )
+        {
+          Remove( dialog );
+          dialog = null;
+        }
+      }
+      if ( aValue > text_mid.Opacity )
+        text_mid.Opacity = aValue;
+      if ( aValue > Icon.Opacity )
+        Icon.Opacity = aValue;
+    }
+  }
+
+  $rect <450,50,650,90>
+  slot Slot
+  {
+    sender; /* the method is called from the sender object */
+  }
+
+  $rect <450,100,650,140>
+  var prog::batterywindow_l dialog = null;
+
+  $rect <20,20,160,60>
+  object Views::Text text_large
+  {
+    preset Bounds = <159,42,379,145>;
+    preset String = "Test_l";
+    preset Font = XFlat::FontXL;
+    preset Color = prog::textcolor;
+  }
+
+  $rect <20,20,160,60>
+  object Views::Text text_mid
+  {
+    preset Bounds = <200,70,362,146>;
+    preset String = "Test";
+    preset Font = XFlat::FontM;
+    preset Color = prog::textcolor;
+  }
+}
+
+$rect <30,190,230,230>
+$output false
+class tempwindow : prog::window
+{
+  $rect <10,230,210,270>
+  inherited property Bounds = <0,0,300,200>;
+
+  $rect <10,390,210,430>
+  inherited method UpdateLayout()
+  {
+    // Always invoke the inherited method.
+    super( aSize );
+
+    /*
+
+      HINT:
+
+      This method exists for sophisticated layout calculation. Please note, that in 
+      most cases it is completely sufficient to use the views property 'Layout' to
+      determine how the view should behave when the component is resized.
+
+    */
+
+    /*
+
+      TO DO:
+
+      Put here the code to calculate new position and size of enclosed views. The
+      current (new) size of the component itself is passed in the parameter aSize.
+      For example:
+
+        SomeView.Bounds = rect( 10, 10, aSize.x - 20, aSize.y - 20 );
+
+    */
+  }
+
+  $rect <10,350,210,390>
+  inherited method UpdateViewState()
+  {
+    // Always invoke the inherited method.
+    super( aState );
+
+    /*
+
+      HINT 1:
+
+      This method is invoked automatically when the state set of the component has
+      been changed. The new state set can be found in the parameter aState.
+      Following are the important states:
+
+        Enabled   --> The component can react to user inputs.
+
+        Selected  --> The component is selected in context of its owner.
+
+        Focused   --> The component is selected in context of its owner and 
+                      the owner can react to keyboard events. In this manner the
+                      component is also able to react to keyboard events.
+
+        Modal     --> The component is modal. All events are redirected to this
+                      component.
+
+      To determine whether a state is currently active or not you have to test
+      the aState parameter. For example to test the 'Selected' state:
+
+        if ( aState.contains( Core::ViewState[ Selected ]))
+        {
+          ... yes, this component is currently selected.
+        }
+
+    */
+
+    /*
+
+      HINT 2:
+
+      Alternatively you can request this method invocation by executing explicitly
+      following code:
+
+
+        InvalidateViewState();
+
+    */
+      
+    /*
+
+      TO DO 1:
+
+      Put here the code to ensure that the visual aspect of the component does
+      reflect its current state. For example, depending on its 'Enabled' state
+      a component may appear with full colors or pale if it is disabled:
+
+        if ( aState.contains( Core::ViewState[ Enabled ]))
+        {
+          SomeBackgroundView.Opacity = 255;
+          SomeTextView.Color         = #000000FF;
+        }
+        else
+        {
+          SomeBackgroundView.Opacity = 128;
+          SomeTextView.Color         = #00000080;
+        }
+
+
+      TO DO 2:
+
+      You can evaluate here also the state of any other member in your component.
+      For example in a push-button component, the button should appear highlighted
+      as long as the user holds the finger within a touch area of the button:
+
+        if ( SomeTouchHandler.Down && SomeTouchHandler.Inside )
+          HighlightedBackground.Visible = true;
+        else
+          HighlightedBackground.Visible = false;
+
+      The touch handler itself only requests the update method to be called. Use
+      for this purpose 'InvalidateViewState()' method.
+
+
+      TO DO 3:
+
+      You can calculate here also the position/size of views accordingly to the
+      state of any other member in your component. For example in a slider you
+      can calculate the position of the slider knob from some properties like
+      'SliderValue' and 'SliderRange':
+
+        SliderKnob.Bounds.origin.x = ( SliderValue * Bounds.w ) / SliderRange;
+
+      Changing the 'SliderValue' or 'SliderRange' property should only request
+      the update method to be called. Use for this purpose 'InvalidateViewState()'
+      method.
+
+    */
+  }
+
+  // To do:
+  // 
+  // - Adjust the visible size of your component (the thick blue border).
+  // 
+  // - The simplest way to compose the appearance of the component is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To implement the interface of the component use the 'Property' template from \
+  // the Gallery folder 'Chora'.
+  // 
+  // - To store values use the 'Variable' and 'Array' templates available in the \
+  // Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - In the method 'UpdateViewState()' you can put code to update the state of \
+  // views enclosed in your component.
+  // 
+  // - In the method 'UpdateLayout()' you can put code to perform sophisticated layout \
+  // calculation for enclosed views.
+  note legend Note1
+  {
+    attr Bounds = <220,230,1000,550>;
+  }
+}
+
+$rect <20,310,220,350>
+$output false
+class batterywindow_l : Core::Group
+{
+  $rect <840,9,1040,49>
+  inherited property Bounds = <0,0,769,369>;
+
+  // To do:
+  // 
+  // - Adjust the visible size of your component (the thick blue border).
+  // 
+  // - The simplest way to compose the appearance of the component is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To implement the interface of the component use the 'Property' template from \
+  // the Gallery folder 'Chora'.
+  // 
+  // - To store values use the 'Variable' and 'Array' templates available in the \
+  // Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - In the method 'UpdateViewState()' you can put code to update the state of \
+  // views enclosed in your component.
+  // 
+  // - In the method 'UpdateLayout()' you can put code to perform sophisticated layout \
+  // calculation for enclosed views.
+  note legend Note1
+  {
+    attr Bounds = <249,440,1029,760>;
+  }
+
+  $rect <840,69,1040,109>
+  slot Oncancel
+  {
+    sender; /* the method is called from the sender object */
+    postsignal oncancel;
+  }
+
+  $rect <840,120,1040,160>
+  property slot oncancel = null;
+
+  $rect <20,20,160,60>
+  object XFlat::VarianceDisplay VarianceDisplay
+  {
+    preset Bounds = <180,80,569,311>;
+  }
+}
+
+// start stop widgets
+note group Note4
+{
+  attr Bounds = <10,390,460,529>;
+}
+
+$rect <20,450,220,490>
+$output false
+class startbutton : Core::Group
+{
+  $rect <10,230,210,270>
+  inherited property Bounds = <0,0,300,200>;
+
+  $rect <10,390,210,430>
+  inherited method UpdateLayout()
+  {
+    // Always invoke the inherited method.
+    super( aSize );
+
+    /*
+
+      HINT:
+
+      This method exists for sophisticated layout calculation. Please note, that in 
+      most cases it is completely sufficient to use the views property 'Layout' to
+      determine how the view should behave when the component is resized.
+
+    */
+
+    /*
+
+      TO DO:
+
+      Put here the code to calculate new position and size of enclosed views. The
+      current (new) size of the component itself is passed in the parameter aSize.
+      For example:
+
+        SomeView.Bounds = rect( 10, 10, aSize.x - 20, aSize.y - 20 );
+
+    */
+  }
+
+  $rect <10,350,210,390>
+  inherited method UpdateViewState()
+  {
+    // Always invoke the inherited method.
+    super( aState );
+
+    /*
+
+      HINT 1:
+
+      This method is invoked automatically when the state set of the component has
+      been changed. The new state set can be found in the parameter aState.
+      Following are the important states:
+
+        Enabled   --> The component can react to user inputs.
+
+        Selected  --> The component is selected in context of its owner.
+
+        Focused   --> The component is selected in context of its owner and 
+                      the owner can react to keyboard events. In this manner the
+                      component is also able to react to keyboard events.
+
+        Modal     --> The component is modal. All events are redirected to this
+                      component.
+
+      To determine whether a state is currently active or not you have to test
+      the aState parameter. For example to test the 'Selected' state:
+
+        if ( aState.contains( Core::ViewState[ Selected ]))
+        {
+          ... yes, this component is currently selected.
+        }
+
+    */
+
+    /*
+
+      HINT 2:
+
+      Alternatively you can request this method invocation by executing explicitly
+      following code:
+
+
+        InvalidateViewState();
+
+    */
+      
+    /*
+
+      TO DO 1:
+
+      Put here the code to ensure that the visual aspect of the component does
+      reflect its current state. For example, depending on its 'Enabled' state
+      a component may appear with full colors or pale if it is disabled:
+
+        if ( aState.contains( Core::ViewState[ Enabled ]))
+        {
+          SomeBackgroundView.Opacity = 255;
+          SomeTextView.Color         = #000000FF;
+        }
+        else
+        {
+          SomeBackgroundView.Opacity = 128;
+          SomeTextView.Color         = #00000080;
+        }
+
+
+      TO DO 2:
+
+      You can evaluate here also the state of any other member in your component.
+      For example in a push-button component, the button should appear highlighted
+      as long as the user holds the finger within a touch area of the button:
+
+        if ( SomeTouchHandler.Down && SomeTouchHandler.Inside )
+          HighlightedBackground.Visible = true;
+        else
+          HighlightedBackground.Visible = false;
+
+      The touch handler itself only requests the update method to be called. Use
+      for this purpose 'InvalidateViewState()' method.
+
+
+      TO DO 3:
+
+      You can calculate here also the position/size of views accordingly to the
+      state of any other member in your component. For example in a slider you
+      can calculate the position of the slider knob from some properties like
+      'SliderValue' and 'SliderRange':
+
+        SliderKnob.Bounds.origin.x = ( SliderValue * Bounds.w ) / SliderRange;
+
+      Changing the 'SliderValue' or 'SliderRange' property should only request
+      the update method to be called. Use for this purpose 'InvalidateViewState()'
+      method.
+
+    */
+  }
+
+  // To do:
+  // 
+  // - Adjust the visible size of your component (the thick blue border).
+  // 
+  // - The simplest way to compose the appearance of the component is to use the \
+  // 'Views' and 'Widget Sets' from the Gallery.
+  // 
+  // - To react to touch or keyboard events use the templates from the Gallery folder \
+  // 'Event Handlers'.
+  // 
+  // - To perform transitions (animations) use the templates from the Gallery folder \
+  // 'Effects'.
+  // 
+  // - To implement the interface of the component use the 'Property' template from \
+  // the Gallery folder 'Chora'.
+  // 
+  // - To store values use the 'Variable' and 'Array' templates available in the \
+  // Gallery folder 'Chora'.
+  // 
+  // - To implement behavior use the 'Method' and 'Slot Method' templates available \
+  // in the Gallery folder 'Chora'.
+  // 
+  // - In the method 'UpdateViewState()' you can put code to update the state of \
+  // views enclosed in your component.
+  // 
+  // - In the method 'UpdateLayout()' you can put code to perform sophisticated layout \
+  // calculation for enclosed views.
+  note legend Note1
+  {
+    attr Bounds = <220,230,1000,550>;
+  }
+}
+
+$rect <240,450,440,490>
+$output false
+enum buttonmode
+{
+  $rect <10,10,210,50>
+  item FirstItem;
+
+  $rect <220,10,420,50>
+  item SecondItem;
+
+  $rect <430,10,630,50>
+  item ThirdItem;
+}
+
+// layout and color constants
+note group Note2
+{
+  attr Bounds = <469,10,889,389>;
+}
+
+// common animation time for all animations
+$rect <480,40,680,80>
+$output false
+const int32 animationtime = 300;
+
+$rect <680,140,880,180>
+$output false
+const int32 captionheight = 36;
+
+$rect <680,40,880,80>
+$output false
+const point spacing = <8,8>;
+
+$rect <680,190,880,230>
+$output false
+const int32 statusheight = 56;
+
+$rect <480,90,680,130>
+$output false
+const point screensize = <800,480>;
+
+$rect <480,290,680,330>
+$output false
+const color startcolor = #83C10CFF;
+
+$rect <680,90,880,130>
+$output false
+const point border = <16,16>;
+
+$rect <480,240,680,280>
+$output false
+const color selectcolor = #B8C8C5FF;
+
+$rect <480,340,680,380>
+$output false
+const color stopcolor = #C10C4CFF;
+
+$rect <680,340,880,380>
+$output false
+const color textcolor = #3B5E54FF;
+
+$rect <680,240,880,280>
+$output false
+const color buttonbgcolor = #3B5E54FF;
+
+$rect <680,290,880,330>
+$output false
+const color buttontextcolor = #FFFFFFFF;
+
+$rect <480,190,680,230>
+$output false
+const color captioncolor = #00BCC8FF;
+
+$rect <480,140,680,180>
+$output false
+const color backcolor = #FFFFFF44;
+
+$rect <10,540,210,580>
+$output false
+class DeviceClass : Templates::DeviceClass
+{
+  $rect <420,60,620,100>
+  onset Property
+  {
+    // The property doesn't change -> nothing to do.
+    if ( pure Property == value )
+      return;
+
+    // Remember the new value in the internal memory of the property.
+    pure Property = value;
+
+    // For target code generation you will use your specific device API 
+    // to change the affected value.
+    $if !$prototyper
+      native ( value )
+      {
+        /*
+           TO DO:
+
+           You can call a function of your own device API or you simply
+           modify a variable existing in your middleware to reflect the
+           new value:
+
+           YourDevice_SetSomeValue( value );
+
+           or
+
+           YourDevice_SomeVariable = value;
+        */
+      }
+    $endif
+
+    // Notify all associated property observers.
+    notifyobservers ^Property;
+  }
+
+  // This property represents an individual setting or state value existing within \
+  // the device.
+  $rect <220,60,420,100>
+  property int32 Property = 0;
+
+  // This method is intended to be called by the device to notify the GUI application \
+  // about an alternation of its setting or state value.
+  $rect <20,60,220,100>
+  $output true
+  method void UpdateProperty( arg int32 aNewValue )
+  {
+    // Only if the reported value does differ from the one stored currently in the property.
+    if ( aNewValue != pure Property )
+    {
+      // Remember the new value in the internal memory of the property.
+      pure Property = aNewValue;
+
+      // Notify all associated property observers.
+      notifyobservers ^Property;
+    }
+  }
+
+  // This object represents an individual system event.
+  $rect <220,280,420,320>
+  object Core::SystemEvent SystemEvent;
+
+  // This method is intended to be called by the device to notify the GUI application \
+  // about a particular system event.
+  $rect <20,280,220,320>
+  $output true
+  method void TriggerEvent()
+  {
+    // Just trigger the system event. All associated system event handler
+    // will then be notified automatically.
+    SystemEvent.Trigger( null, false );
+
+    /*
+       HINT 1:
+
+       When triggering the event you can pass an optional 'context' object.
+       With it additional event specific data can be attached at the event
+       and dispatched with it. All notified system event handler can thus
+       evaluate this 'context' information.
+
+       To do this, you will need to define a particular 'context' class
+       suitable to store the event specific information. Then create an
+       instance of the class, initialize it with all the specific context
+       data and finally pass the instance in the first parameter of the
+       Trigger() method:
+
+
+       var YourUnit::ContextClass context = new YourUnit::ContextClass;
+
+       context.SomeData1 = ...
+       context.SomeData2 = ...
+
+       SystemEvent.Trigger( context, false );
+
+
+       You can add parameters to the method in order to simply receive
+       values from the device.
+    */
+
+    /*
+       HINT 2:
+
+       When triggering a system event you can determine its priority. Per
+       default system events are delivered strictly in the order in which
+       they have been triggered. When you pass 'true' in the last parameter
+       of Trigger() you can force the event to be dispatched early:
+
+       SystemEvent.Trigger( null, true );
+    */
+  }
+
+  // This method implements a device command.
+  $rect <20,430,220,470>
+  method int32 Command( arg int32 aParameter1, arg bool aParameter2 )
+  {
+    // The following code is used during prototyping only. It simply returns
+    // a dummy value. No device specific API is used during prototyping.
+    $if $prototyper
+      /*
+         TO DO:
+
+         List all parameters of this method not used explicitly. This will
+         suppress the Chora warnings because of unused parameters.
+      */
+
+      aParameter1;
+      aParameter2;
+
+      /*
+         TO DO:
+
+         The following code is necessary for command methods intended to
+         return a value. It can be removed if the method is declared with
+         'void' as its return data type.
+
+         In the case a return value is desired, adapt the 'return' statement
+         to match the method's return data type. The value is just a dummy
+         used during prototyping only.
+      */
+
+      return 0;
+    $endif
+
+    // For target code generation you will use your specific device API 
+    // to perform the command in the device.
+    $if !$prototyper
+      /*
+         TO DO:
+
+         The following variable declaration is reasonable for command methods
+         which return a value. It can be removed if the method is declared with
+         'void' as its return data type or if the return value is not obtained
+         from the native code.
+
+         Additionally you may need to adapt this declaration to the method's
+         return data type.
+      */
+
+      var int32 result = 0;
+       
+      /*
+         TO DO:
+
+         The following native statement encloses the code to communicate with
+         your device API. Chora expects here all variables accessed from the
+         native code to be explicitly listed in the head of the native statement.
+         
+         Write here all parameters and locally declared variables you intend to 
+         access from the native code.
+      */
+
+      native ( aParameter1, aParameter2, result )
+      {
+        /*
+           TO DO:
+
+           You can call a function of your own device API or you simply
+           modify variables existing in your middleware to reflect the
+           command:
+
+           YourDevice_DoSomething( aParameter1, aParameter2, ... );
+
+           or
+
+           YourDevice_SomeVariable    = aParameter1;
+           YourDevice_AnotherVariable = aParameter2;
+
+           Also receive a return value:
+
+           result = YourDevice_DoSomething();
+        */
+      }
+
+      /*
+         TO DO:
+
+         The following 'return' statement is needed only when the command method
+         is declared to return a value. Otherwise you can remove the statement.
+      */
+      return result;
+    $endif
+  }
+
+  // Example of an interface to read and modify a device setting or state value
+  note group Note1
+  {
+    attr Bounds = <10,10,630,110>;
+  }
+
+  // Example of an interface to react to a system event
+  note group Note2
+  {
+    attr Bounds = <10,230,630,330>;
+  }
+
+  // Example of an interface to perform an operation in the device
+  note group Note3
+  {
+    attr Bounds = <10,380,630,480>;
+  }
+
+  // The property 'Property' represents an individual setting or state value existing \
+  // within the device. Through the associated 'onset' method all write operations \
+  // to the property can be directed to your particular device API. The read accesses, \
+  // in contrast, are handled internally by using the last known value of the property. \
+  // See inline documentation inside the 'onset' method 'OnSetProperty'.
+  // 
+  // The method 'UpdateProperty', in turn, is intended to be called by the device \
+  // to notify the GUI application about an alternation of a setting or state value \
+  // represented by the property 'Property'. See inline documentation inside the \
+  // method.
+  // 
+  // You will eventually need to change the data type of the property to match the \
+  // data in your device (e.g. to 'bool', 'uint32', or 'string', etc.). Use for this \
+  // purpose the attribute 'Type' of the property itself. Accordingly the declaration \
+  // of the 'UpdateProperty' method may need an adaptation.
+  note legend Note4
+  {
+    attr Bounds = <700,10,1540,220>;
+  }
+
+  note arrow Note5
+  {
+    attr Point1 = <630,60>;
+    attr Point2 = <700,60>;
+  }
+
+  // The object 'SystemEvent' represents an individual system event. When the system \
+  // event is triggered all associated system event handler are notified automatically.
+  // 
+  // The method 'TriggerEvent' method is intended to be called by the device to notify \
+  // the GUI application about the particular system event represented by the object \
+  // 'SystemEvent'. This method exists for your convenience only and is optional. \
+  // See inline documentation inside the method.
+  note legend Note6
+  {
+    attr Bounds = <700,230,1540,370>;
+  }
+
+  note arrow Note7
+  {
+    attr Point1 = <630,280>;
+    attr Point2 = <700,280>;
+  }
+
+  // This method demonstrates the implementation of a device command. The GUI application \
+  // can call the method with the intention to trigger the device to perform an action. \
+  // It's up to you what the method does. You are free in the declaration of the \
+  // method. The parameters and the return value can be changed. See inline documentation \
+  // inside the method.
+  note legend Note8
+  {
+    attr Bounds = <700,380,1540,470>;
+  }
+
+  note arrow Note9
+  {
+    attr Point1 = <630,430>;
+    attr Point2 = <700,430>;
+  }
+
+  // More functionality ... ?
+  // 
+  // Within the device class you can add as many commands, system events and properties \
+  // as required by your target device. Use for this purpose the templates from the \
+  // Gallery folder 'Device'.
+  note legend Note10
+  {
+    attr Bounds = <10,500,630,600>;
+  }
+}
+
+$rect <210,540,410,580>
+autoobject prog::DeviceClass Device;
+
+// The class 'prog::DeviceClass' implements the interface between the GUI application \
+// and the device. Within the class you can react to system events sent by the device, \
+// exchange data with the device or send commands to the device. You are completely \
+// free in the design of this interface.
+// 
+// The object 'Device' represents the instance of the device interface. It exists \
+// for your convenience. As an autoobject it is globally available for all GUI components \
+// within your project.
+note legend Note3
+{
+  attr Bounds = <420,540,920,720>;
+}
+
+// bigwindow on clicking
+note group Note5
+{
+  attr Bounds = <10,250,460,380>;
+}
